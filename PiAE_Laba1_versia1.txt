@@ -1,4 +1,4 @@
-import numpy as np
+# import numpy as np
 import math
 
 def func(x):
@@ -18,46 +18,51 @@ def inpt(n):
 
     F = open("plan5.txt")
     for i in range(n):
-        line = F.readline()        # Следующая строка из файла
+        line = F.readline()        # РЎР»РµРґСѓСЋС‰Р°СЏ СЃС‚СЂРѕРєР° РёР· С„Р°Р№Р»Р°
         parts = line.split(" ")    
-        numbers = [float(P) for P in parts] # Преобразовать весь список 
+        numbers = [float(P) for P in parts] # РџСЂРµРѕР±СЂР°Р·РѕРІР°С‚СЊ РІРµСЃСЊ СЃРїРёСЃРѕРє 
         X[i]=numbers[0]
         P[i]=numbers[1]
 
     F.close()
     return(X,P)
 
-def calc_criteria(n, m, x, p):
-    #1
-    f = np.zeros(m)
+def calc_inf_matrix_M(n, m, x, p):
     M = np.zeros((m,m))
-    
     for k in range(n):
         for i in range(m):
             for j in range(m):
                 M[i][j] = M[i][j]+p[k] * f_x(i, x[k], m)*f_x(j, x[k], m)
+    return M
     
-    print(M)
+
+def calc_criteria(n, m, x, p):
+    f = np.zeros(m)
+    M = np.zeros((m,m))
+    
+    M = calc_inf_matrix_M(n, m, x, p)
+    
+    print("M = ", M)
     #1.D
     det = np.linalg.det(M)
-    print(det)
+    print("#1 D = ", det)
     #2.A
     D =np.linalg.inv(M)
     tr =np.matrix.trace(D) 
     #print(D)
-    print(tr)
+    print("#2 A = ", tr)
     #3.E
     lambd=np.linalg.eig(D)
-    print(max(lambd[0]))
+    print("#3 E = ", max(lambd[0]))
     #4.F2
     F_2 = math.sqrt( np.matrix.trace(np.dot(D,D)) / m )
     
-    print("F_2 = ", F_2)
+    print("#4 F_2 = ", F_2)
     #5.Lambda
     lambd_avg = sum(lambd[0]) / m
     
     L = sum((lambd[0] - lambd_avg)**2)
-    print(L)
+    print("#5 L = ", L)
     
     #6.MV
     MV = max(np.diag(D))
@@ -73,12 +78,25 @@ def calc_criteria(n, m, x, p):
    
     print("#7 G = ", max(G))
     
+    #Task в„–4.Generating q==[0.05; 0.45];{q, 1-2q/2, 1-2q/2, q}{-1,-0.5,0.5,1}
+    q = 0.05
+    step = 0.001
+    f = open('PiAE_L1_task4_output.txt', 'w')
+    while (q < 0.45):
+        q = q + i * step
+        i = i + 1
+        #generating p
+        p_generated = np.array([q, (1-2*q)/2, (1-2*q)/2, q])
+        #calc D criterion
+        M = calc_inf_matrix_M(n, m, x, p_generated)
+        #print("q = ",q,"D_i = ", np.linalg.det(M))
+        f.write(" q = " + str(q) + " D_i = " + str(np.linalg.det(M)) + "\n")
     
 def main():
     n = 4 
     m = 3
     x,p = inpt(n)
-    print(x,'\n',p)
+    print("x = ",x,'\n',"p = ", p)
     calc_criteria(n, m, x, p)
     
     
