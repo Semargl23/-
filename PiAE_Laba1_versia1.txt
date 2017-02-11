@@ -1,0 +1,85 @@
+import numpy as np
+import math
+
+def func(x):
+    func_value = np.array( [1, x, x**2] )
+    return func_value
+
+def f_x(i, x_j, m):
+    #print(i)
+    n_a = np.zeros(m)
+    n_a[i] = 1
+    #print(n_a)
+    return n_a[0]*1 + n_a[1]*x_j + n_a[2]*x_j**2  
+
+def inpt(n):
+    X =  np.zeros(n)
+    P =  np.zeros(n)
+
+    F = open("plan5.txt")
+    for i in range(n):
+        line = F.readline()        # Следующая строка из файла
+        parts = line.split(" ")    
+        numbers = [float(P) for P in parts] # Преобразовать весь список 
+        X[i]=numbers[0]
+        P[i]=numbers[1]
+
+    F.close()
+    return(X,P)
+
+def calc_criteria(n, m, x, p):
+    #1
+    f = np.zeros(m)
+    M = np.zeros((m,m))
+    
+    for k in range(n):
+        for i in range(m):
+            for j in range(m):
+                M[i][j] = M[i][j]+p[k] * f_x(i, x[k], m)*f_x(j, x[k], m)
+    
+    print(M)
+    #1.D
+    det = np.linalg.det(M)
+    print(det)
+    #2.A
+    D =np.linalg.inv(M)
+    tr =np.matrix.trace(D) 
+    #print(D)
+    print(tr)
+    #3.E
+    lambd=np.linalg.eig(D)
+    print(max(lambd[0]))
+    #4.F2
+    F_2 = math.sqrt( np.matrix.trace(np.dot(D,D)) / m )
+    
+    print("F_2 = ", F_2)
+    #5.Lambda
+    lambd_avg = sum(lambd[0]) / m
+    
+    L = sum((lambd[0] - lambd_avg)**2)
+    print(L)
+    
+    #6.MV
+    MV = max(np.diag(D))
+    print("#6 MV = ", MV)
+    
+    #7.G
+    G = np.zeros(n)
+    
+    for i in range (n):
+        f = func(x[i])
+        ft_D = np.dot(f.transpose(), D)
+        G[i] = (np.dot(ft_D,f))
+   
+    print("#7 G = ", max(G))
+    
+    
+def main():
+    n = 4 
+    m = 3
+    x,p = inpt(n)
+    print(x,'\n',p)
+    calc_criteria(n, m, x, p)
+    
+    
+main()
