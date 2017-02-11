@@ -79,11 +79,12 @@ def calc_criteria(n, m, x, p):
     print("#7 G = ", max(G))
     
     #Task №4.Generating q==[0.05; 0.45];{q, 1-2q/2, 1-2q/2, q}{-1,-0.5,0.5,1}
-    q = 0.05
+    q0 = 0.05
     step = 0.001
+    q = q0
     f = open('PiAE_L1_task4_output.txt', 'w')
     while (q < 0.45):
-        q = q + i * step
+        q = q0 + i * step
         i = i + 1
         #generating p
         p_generated = np.array([q, (1-2*q)/2, (1-2*q)/2, q])
