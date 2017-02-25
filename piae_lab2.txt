@@ -1,0 +1,125 @@
+import numpy as np
+import math
+
+def inpt(n):
+    X =  np.zeros((n,n))
+    P =  np.zeros(n)
+
+    F = open("piae_lab2.txt")
+    for i in range(n):
+        line = F.readline()        # Следующая строка из файла
+        parts = line.split(" ")    
+        numbers = [float(P) for P in parts] # Преобразовать весь список 
+        X[i][0]=numbers[0]
+        X[i][1]=numbers[1]
+        P[i]=numbers[2] 
+
+    F.close()
+    return(X,P)
+
+def func(x):
+    func_value = np.array( [1, x[0],x[1],x[0]*x[1], x[0]**2, x[1]**2] )
+    return func_value
+
+def f_x(i, x_j, m):
+    #print(i)
+    n_a = np.zeros(m)
+    n_a[i] = 1
+    #print(n_a)
+    return n_a[0]*1 + n_a[1]*x_j[0] + n_a[2]*x_j[1] + n_a[3]*x_j[0]*x_j[1] + n_a[4]*x_j[0]**2 + n_a[5]*x_j[1]**2  
+
+def calc_inf_matrix_M_i(n, m, x, p, k):
+    M = np.zeros((m,m))
+    for i in range(m):
+        for j in range(m):
+            M[i][j] = M[i][j]+p[k] * f_x(i, x[k], m)*f_x(j, x[k], m)
+    return M
+
+def calc_psy_grad(n,m,x,p): # psy = f*M^(-1)*f for i = 1,n
+    psy_grad = np.zeros(n)
+    
+    for i in range(n):
+        M_i = calc_inf_matrix_M_i(n,m,x,p,i)
+        f = func(x[i])
+        f_t = np.transpose(f)
+        f_t_M_inv = np.dot(f_t,np.linalg.inv(M_i))
+        psy_grad[i] = np.dot(f_t_M_inv,f)
+    return(psy_grad)
+
+def check_equals(n, psy_grad, q):
+    for i in range(q, n-1):
+        for j in range(i+1,n):
+            if psy_grad[i] != psy_grad[j]:
+                print("\nЕсть разные, необходимость не выполнена\n")
+                return(-1)
+    print("\nНеобходимость выполнена\n")
+    return(0) #возможно, стоит индекс возвращать, но вроде "исключение" только по (9) согласно методе
+
+def calc_avg(q, psy_grad):
+    avg = 0
+    for i in range (q, n):
+        avg = avg + psy_grad[i]
+    return avg / (n - q)
+
+def calc_new_p_s(n, q, x, p, psy_grad, lambd): #Проверка цикла с (a,b) - не уверен, насчет границ обработки цикла
+    avg = calc_avg(q, psy_grad)
+    result = np.zeros(n)
+    # (7) - (8) по методичке
+    for i in range (q,n):
+        result[i] = psy_grad[i] - avg
+        
+    for i in range (q):
+        result[i] = avg - psy_grad[i]
+    #непонятная манипуляция из (8)
+    result[q + 1] = avg # неясно, это с avg или мне avg через result следует пересчитать. 
+    
+    #calc p_s+1
+    result = p + lambd * result
+    return(result)
+        
+    
+    
+def p_opt(n, m, x, p, q):
+    while(true):
+        success = 1 #оптимизм
+        #calc grad vector
+        psy_grad = calc_psy_grad(n, m, x, p)
+        #check opt. conditions
+        if(check_equals(n,psy_grad,q) == 1): #выполнено необходимое условие
+            avg = calc_avg(q, psy_grad)
+            for j in range(q):
+                if(avg - psy_grad[j] < 0.00001):
+                    success = 0
+                    #p_s is not a sollution
+                    #Как исключать? Мне непонятно. Суть в том, что нужно будет насчитывать (7) и (8), 
+                    #а исключение, имхо, ведет за собой q= q - 1(Но это не точно), стоит ли p 
+                    #тогда изменять(оно = 0  т.к. активно)?
+                    #В методе написано, что не стоит учитывать "исключения" при подсчетах.
+                    #Еще 1 вариант - хранить массив флажков(значимый/незначимый p), так же менять q=q-1.
+                    #Вопрос открыт.
+                    #Поэтому пока просто q = q - 1. И возможно p = 0 стоит при этом заменить на p = "малое положительное"
+                    #Исключаем
+                    q = q - 1
+            #Все, "понаисключали"
+        else:
+            #p_s is not a sollution
+            success = 0
+            
+        if(success == 1):
+            quit() # ура-ура
+        else: #теперь ищем p_s+1
+            lambd = 0.001 #не знаю. Фантазия.
+            result = np.zeros(n)
+            result = calc_new_p_s(n, q, x, p, psy_grad, lambd)
+            while(sum(result) != 1):
+                lambd = lambd / 2 #надо смотреть. Не уверен даже, стоит ли инкрементировать взамен этого.
+                calc_new_p_s(n, q, x, p, psy_grad, lambd)
+                
+
+def main():
+    n = 25
+    m = 6
+    q = 0
+    x,p = inpt(n)
+    
+main()
